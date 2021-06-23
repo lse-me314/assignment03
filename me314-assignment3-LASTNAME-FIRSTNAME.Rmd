@@ -1,7 +1,7 @@
 
-# ME314 Managing and Visualizing Data
+# ME314 Introduction to Data Science and Machine Learning
 
-## Day 3 Assignment, LSE ME314 2018
+## Day 3 Assignment, LSE ME314 2021
 ---
 
 ### 1.  Normalizing data
