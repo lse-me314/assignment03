@@ -1,6 +1,6 @@
 ---
 title: "Working with RSQLite"
-author: "Kenneth Benoit (w/inspiration from **RSQLite** vignette)"
+author: "Kenneth Benoit & Sarah Jewett (w/inspiration from **RSQLite** vignette)"
 output: github_document
 ---
     
@@ -16,6 +16,7 @@ knitr::opts_chunk$set(comment = "##", collapse = TRUE)
 
 ```{r}
 library("DBI")
+library(dplyr)
 ```
 
 ## Creating a new database
@@ -25,10 +26,12 @@ To create a new SQLite database, you simply supply the filename to `dbConnect()`
 ```{r}
 mydb <- dbConnect(RSQLite::SQLite(), "my-db.sqlite")
 dbDisconnect(mydb)
+# unlink() deletes the file(s) or directories
 unlink("my-db.sqlite")
 ```
 
 If you just need a temporary database, use either `""` (for an on-disk database) or `":memory:"` or `"file::memory:"` (for a in-memory database). This database will be automatically deleted when you disconnect from it.
+
 
 ```{r}
 mydb <- dbConnect(RSQLite::SQLite(), "")
@@ -41,6 +44,7 @@ dbDisconnect(mydb)
 
 ```{r}
 airports <- read.csv("nycflights13/airports.csv")[, -1]
+# [, -1 is dropping the first column, which is just 'X' and row numbers]
 planes <- read.csv("nycflights13/planes.csv")[, -1]
 ```
 
@@ -55,22 +59,129 @@ dbListTables(mydb)
 
 ## Queries
 
-Queries in **RSQLite** pass SQL code directly, using `dbGetQuery()`:
+Queries in **RSQLite** pass SQL code directly, using `dbGetQuery()`  
+ 
+**SELECT** determines the columns to include in the query's results 
+    **LIMIT** is used in tandem with SELECT to limit the # of records returned
     
+Let's select everything from the the airports data
 ```{r}
 dbGetQuery(mydb, 'SELECT * FROM airports LIMIT 5')
+dbGetQuery(mydb, 'SELECT name, tzone FROM airports')
 ```
 
+Limit 5 is like using head() or:
+```{r}
+airports[1:5,]
+```
+Note how using LIMIT changes the description of the data in the upper left... once you use LIMIT you cannot rely on this to get a sense of how many results are truly in your query. However, if you knit your file without using LIMIT and you SELECT *, it will actually print all the results (BAD, VERY BAD!) This is why the PDF version of this file uses LIMIT mostly throughout, whereas the RMD removes these so you can interact more accurately with each query. 
+
+there is also SELECT DISTINCT
+```{r}
+dbGetQuery(mydb, 'SELECT DISTINCT tzone FROM airports')
+```
+10 rows using DISTINCT versus 1458 rows without it:
+```{r}
+dbGetQuery(mydb, 'SELECT tzone FROM airports')
+```
+
+**WHERE** filters out unwanted data
 ```{r}
 dbGetQuery(mydb, 'SELECT * FROM planes WHERE engines > 2')
 ```
+This is equivalent to to the following in dplyr:
+```{r}
+planes %>% 
+    filter(engines >2)
+```
 
+You can make more than one condition with WHERE using AND
+```{r}
+dbGetQuery(mydb, 'SELECT * FROM planes WHERE engines > 1 AND seats < 55')
+```
+Note the difference between these two and the use of " versus ' for the entire Query
+Hint: try using ' for the query and ' to specify AIRBUS....
+
+```{r}
+dbGetQuery(mydb, "SELECT * FROM planes WHERE manufacturer != 'AIRBUS'")
+dbGetQuery(mydb, 'SELECT * FROM planes WHERE manufacturer != "AIRBUS"')
+```
+You may have noticed that despite specifiying AIRBUS, there is still AIRBUS INDUSTRIES. This is where we can use matching conditions. 
+
+_ matches 1 character precisely
+
+% matches any amount of characters 
+
+We use NOT LIKE to specify that we want it to leave out anything LIKE AIRBUS
+
+```{r}
+dbGetQuery(mydb, "SELECT DISTINCT manufacturer FROM planes WHERE manufacturer NOT LIKE 'AIRBUS%'")
+```
+
+**GROUP BY** groups rows together by common column values.
+
+You can also use **COUNT** with GROUP BY to count occurrences.
+
+Here we can use GROUP BY with COUNT to see how many times a manufacturer appears in the data
+
+```{r}
+dbGetQuery(mydb, "SELECT manufacturer, model, COUNT (*) FROM planes GROUP BY manufacturer")
+```
+
+You have repetitive data of manufacturer and model thanks to the tailnumber and year
+```{r}
+dbGetQuery(mydb, "SELECT manufacturer, model, COUNT (*) FROM planes GROUP BY model")
+```
+
+Well, it's pretty annoying that you've used COUNT here but the values are out of order due to it going alphabetically by manufacturer. That's where you can use....
+
+**ORDER BY** , which sorts the rows in the final result set by column(s)
+
+```{r error=TRUE}
+
+dbGetQuery(mydb, "SELECT manufacturer, model, 
+           COUNT (*) 
+           FROM planes 
+           GROUP BY model 
+           ORDER BY COUNT")
+```
+
+Spoiler alert! this doesn't work! We need to name the COUNT something. So let's rewrite the same code again, but this time use AS!
+
+```{r}
+dbGetQuery(mydb, 'SELECT manufacturer, model, 
+           COUNT (*) AS count 
+           FROM planes 
+           GROUP BY model 
+           ORDER BY count 
+           LIMIT 6')
+```
+It's doing the same thing as order() and sort(), in which is goes smallest to largest. 
+So let's use DESC to see the largest number first instead.
+```{r}
+dbGetQuery(mydb, "SELECT manufacturer, model, 
+           COUNT (*) AS count 
+           FROM planes 
+           GROUP BY model 
+           ORDER BY count DESC
+           LIMIT 6")
+```
+
+**FROM** and **JOIN** are important clauses when using SQL, particularly when you have a few data frames that you want to link, but you can't/don't want to merge all of the data into a single data frame. *FROM* identifies the tables from which to draw data and how tables should be joined *JOIN*, well, joins more than one table. There are different ways of joining, but for now, focus on the clauses we've gone through first with a single data frame. 
+
+Note that you can also do a query directly within a SQL chunk, much like an R chunk from the drop down above. Notice in R Markdown, how we've been inserting R Chunks, which are created by starting with ```{r} followed by our code, and ending with ```. Well, we can replace the {r} with 'sql connection= ' and then just pop our query in, without needing to keep using the dbGetQuery() function. 
+
+```{sql connection=mydb}
+SELECT * FROM planes LIMIT 5
+```
+
+It makes for much nicer output in RMarkdown. Try changing some of the chunks earlier with this approach and see how it compares overall.
 
 ## Batched queries
 
 If you run a query and the results don't fit in memory, you can use `dbSendQuery()`, `dbFetch()` and `dbClearResults()` to retrieve the results in batches. By default `dbFetch()` will retrieve all available rows: use `n` to set the maximum number of rows to return.
 
-```{r}
+```{r results=FALSE}
 rs <- dbSendQuery(mydb, 'SELECT * FROM planes')
 while (!dbHasCompleted(rs)) {
     df <- dbFetch(rs, n = 10)
