@@ -85,23 +85,20 @@ b)  Merge or join the subtable from a. `flights` data, to produce a result that 
 ## your code
 ```
 
-c) **(optional)** For every airline that had flights in the `flights` data compute the average age of the planes it flew from the entire dataset.  Age here will be defined as 2013 minus the `year` variable from the `planes` data.  Hint: This involves a join operation on `tailnum`, but also a grouped mean to compute the age (and subtracting 2013, which you can do before or after the computation of the mean).
+c) For every airline that had flights in the `flights` data compute the average age of the planes it flew from the entire dataset.  Age here will be defined as 2013 minus the `year` variable from the `planes` data.  Hint: This involves a join operation on `tailnum`, but also a grouped mean to compute the age (and subtracting 2013, which you can do before or after the computation of the mean).
 
 
 ```{r}
 ## your code
 ```
 
-### 3.  Working with SQL
+### 3.  Groupwork
+Get into pairs or groups and think of a research question you might have using the flights data and produce some output to discuss (no more than 2-3 minutes) at the start of the next class. (You can send the code via slack to be run by Sarah or Yuanmo or connect your own laptop.)
 
-a)  Create a relational dataset in SQLite using the `.csv` data found [here](nycflights13/).  Name each table so that it matches the base filenames of the input data.  You can use DB Browser for this, but describe how you did it, but the answer will use the R package [RSQLite](https://cran.r-project.org/web/packages/RSQLite/RSQLite.pdf). 
+Consult the dplyr reference of the many functions that there are: 
+[dplyr reference](https://dplyr.tidyverse.org/reference/index.html)
 
-[your answer]
 
-b)  Replicate B2 above using an SQL query, including both the command and the output.
-
-[your answer]
-
-c) **(optional)** Replicate B3 above using an SQL query, including both the command and the output.
-
-[your answer]
+```{r}
+## your code
+```
