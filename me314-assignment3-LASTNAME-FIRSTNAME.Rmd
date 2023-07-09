@@ -7,7 +7,12 @@
 ### 1.  Normalizing data
 
 This question uses this table:
-![Not normalized data](http://www.essentialsql.com/wp-content/uploads/2014/06/Intro-Table-Not-Normalized.png)
+
+   | EmployeeID | SalesPerson | SalesOffice | OfficeNumber | Customer1 | Customer2 | Customer3 |
+   | ------:|:-------------:|:----------:|:------------ |:-------:|:------:|:------:|
+   | 1003   | Mary Smith    |  Chicago   | 312-555-1212 | Ford   | GM |       |
+   | 1004   | John Hunt     |  New York  | 212-555-1212 | Dell   | HP | Apple |
+   | 1005   | Martin Hap    |  Chicago   | 312-555-1212 | Boeing |    |       |
 
 from the lecture notes.  For each answer, please explain as fully as possible, and feel free to use tables or diagrams if you prefer.
 
@@ -15,7 +20,7 @@ a)  Why does this table violate the first normal form, and what would be require
 
 [your answer]
 
-b)  What additional steps would be needed to make the table 2NF, and why?
+b)  What additional steps would be needed to make the table 2NF? What about 3NF?
 
 [your answer]
 
@@ -38,16 +43,15 @@ d)  In the table below, which of the three normalization rules does this violate
 
 [your answer]
 
-e)  What would it take to full (1NF-3NF) normalize this dataset?
+e)  What would it take to fully (1NF-3NF) normalize this dataset?
 
    Write out these tables, and describe why this meets each of the normal forms.  This is a database of movies watched on NetBricks, a streaming movie service.
 
-   | Name           | Address    |   Movies Rented   |  Salutation  | Category |
-   |:---------------|:-----------|:------------------|:------------:|----------|
-   | Bob Smith      | 1 Houghton Street    | _Star Wars_, _Inception_ |  Dr.   |  Scifi, Scifi |
-   | Pry Ministair  | 10 Downing St     |  _Brexit the Movie_      |  Lady  | Tragedy |
-   | Joe Bloggs     | 8 Myhatt St.      |  _Fast and Furious 6_, _Fast and Furious 7_     | Mr. | Action, Action |
-
+   | Name           | Address    |   Movies Rented   |  Salutation  | Category | Fiction? |
+   |:---------------|:-----------|:------------------|:------------:|----------|----------|
+   | Bob Smith      | 1 Houghton Street  | _Star Wars_, _Fast and Furious 7_ |  Dr. |  Scifi, Action | Yes, Yes|
+   | Pry Ministair  | 10 Downing St  |  _Brexit: Three Years On_   |  Rt Hon.  | Documentary | No |
+   | Joe Bloggs     | 8 Myhatt St.  |  _The Big Short_, _Star Wars_  | Mr. | Documentary, Scifi | No, Yes |
 
 
 [your answer]
@@ -77,7 +81,7 @@ nrow(flights_sub)
 
 b)  Merge or join the subtable from a. `flights` data, to produce a result that includes:  
    *  Departure time
-   *  Carrier (two digit code, from `carrier`)
+   *  Carrier (two digit code, from `flights`)
    *  Flight number
    *  Destination airport name (hint: you will need to get this from the `airports` table)  
 
